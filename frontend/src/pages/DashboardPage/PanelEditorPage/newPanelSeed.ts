@@ -22,7 +22,8 @@ interface NewPanelSeed {
 	/** May differ from the requested kind — see `resolveSeededPanelKind`. */
 	kind: PanelKind;
 	queries: DashboardtypesQueryDTO[];
-	pluginSpec: SeededPluginSpec;
+	/** Seeded viz slices and/or WebComponent fields (cast at panel create boundary). */
+	pluginSpec: SeededPluginSpec & Record<string, unknown>;
 }
 
 /** Kind to fall back to for a query language a builder-only kind (List) can't hold. */
@@ -56,6 +57,16 @@ export function buildNewPanelSeed(
 ): NewPanelSeed {
 	// A static kind has no query to seed; an exported query can't target it.
 	if (!isExplorerExport || !compositeQuery || isStaticPanelKind(requestedKind)) {
+		if (requestedKind === 'signoz/WebComponentPanel') {
+			return {
+				kind: requestedKind,
+				queries: [],
+				pluginSpec: {
+					pluginId: 'hello',
+					element: 'lax-hello-wc',
+				},
+			};
+		}
 		return {
 			kind: requestedKind,
 			queries: buildDefaultQueries(requestedKind),

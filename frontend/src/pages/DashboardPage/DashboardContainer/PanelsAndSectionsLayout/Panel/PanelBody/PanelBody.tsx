@@ -78,6 +78,32 @@ function PanelBody({
 		!!data.response &&
 		getResponseType(data.response) === data.requestPayload?.requestType;
 	const queries = panel.spec.queries;
+	const isWebComponentPanel = panel.spec.plugin.kind === 'signoz/WebComponentPanel';
+
+	// Web Component panels do not use query-range — mount the host renderer directly.
+	if (isWebComponentPanel) {
+		return (
+			<div className={styles.panelContainer}>
+				<panelDefinition.Renderer
+					panelId={panelId}
+					panel={panel}
+					data={data}
+					isFetching={false}
+					isPreviousData={isPreviousData}
+					error={null}
+					refetch={refetch}
+					onDragSelect={onDragSelect}
+					panelMode={panelMode}
+					enableDrillDown={false}
+					dashboardPreference={dashboardPreference}
+					searchTerm={searchTerm}
+					pagination={pagination}
+					onCloseStandaloneView={onCloseStandaloneView}
+					onClick={onClick}
+				/>
+			</div>
+		);
+	}
 
 	// Not-configured panel: no runnable query, so nothing to error/load on.
 	if (!hasRunnableQueries(queries)) {

@@ -8,6 +8,7 @@ import { definition as TimeSeries } from './kinds/TimeSeriesPanel/definition';
 import { definition as Table } from './kinds/TablePanel/definition';
 import { definition as List } from './kinds/ListPanel/definition';
 import { definition as Text } from './kinds/TextPanel/definition';
+import { definition as WebComponent } from './kinds/WebComponentPanel/definition';
 import { UNSUPPORTED_PANEL } from './kinds/UnsupportedPanel/definition';
 import type {
 	PanelDefinition,
@@ -29,6 +30,7 @@ export const PANELS: PanelRegistry = {
 	[Heatmap.kind]: Heatmap,
 	[List.kind]: List,
 	[Text.kind]: Text,
+	[WebComponent.kind]: WebComponent,
 };
 
 export type PanelOption = Pick<

@@ -60,7 +60,8 @@
 			"__tests__/*": ["./src/__tests__/*"],
 			"tests/*": ["./src/tests/*"],
 			"types/*": ["./src/types/*"],
-			"utils/*": ["./src/utils/*"]
+			"utils/*": ["./src/utils/*"],
+			"plugins/*": ["./src/plugins/*"]
 		},
 		"plugins": [
 			{

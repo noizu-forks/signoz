@@ -255,6 +255,20 @@ export function usePanelTypeSwitch({
 				return;
 			}
 
+			// Query-less kinds (Web Component) seed empty queries — backend rejects extras.
+			if (newKind === 'signoz/WebComponentPanel') {
+				setSpec(
+					buildSpec(
+						{
+							pluginId: 'hello',
+							element: 'lax-hello-wc',
+						} as DashboardtypesPanelPluginDTO['spec'],
+						[],
+					),
+				);
+				return;
+			}
+
 			// First visit → coerce the query type if the new kind disallows it, then
 			// rebuild the builder query for the new type.
 			const queryType = resolveQueryType(newKind, query.queryType);

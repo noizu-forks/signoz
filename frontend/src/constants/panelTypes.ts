@@ -37,6 +37,7 @@ export const getComponentForPanelType = (
 		// Dashboards v2 renders this kind; nothing reaches the V1 chart map for it.
 		[PANEL_TYPES.TEXT]: null,
 		[PANEL_TYPES.EMPTY_WIDGET]: null,
+		[PANEL_TYPES.WEB_COMPONENT]: null,
 	};
 
 	return componentsMap[panelType];

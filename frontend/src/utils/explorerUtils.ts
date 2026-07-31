@@ -80,6 +80,7 @@ export const panelTypeToExplorerView: Record<PANEL_TYPES, ExplorerViews> = {
 	// Dashboard-only visualisation; explorers never offer it.
 	[PANEL_TYPES.TEXT]: ExplorerViews.LIST,
 	[PANEL_TYPES.EMPTY_WIDGET]: ExplorerViews.LIST,
+	[PANEL_TYPES.WEB_COMPONENT]: ExplorerViews.LIST,
 };
 
 export const explorerViewToPanelType = {

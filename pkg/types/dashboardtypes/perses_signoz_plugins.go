@@ -166,24 +166,25 @@ func (BuilderQuerySpec) JSONSchemaOneOf() []any {
 type PanelPluginKind string
 
 const (
-	PanelKindTimeSeries PanelPluginKind = "signoz/TimeSeriesPanel"
-	PanelKindBarChart   PanelPluginKind = "signoz/BarChartPanel"
-	PanelKindAreaChart  PanelPluginKind = "signoz/AreaChartPanel"
-	PanelKindNumber     PanelPluginKind = "signoz/NumberPanel"
-	PanelKindPieChart   PanelPluginKind = "signoz/PieChartPanel"
-	PanelKindTable      PanelPluginKind = "signoz/TablePanel"
-	PanelKindHistogram  PanelPluginKind = "signoz/HistogramPanel"
-	PanelKindList       PanelPluginKind = "signoz/ListPanel"
-	PanelKindText       PanelPluginKind = "signoz/TextPanel"
-	PanelKindHeatmap    PanelPluginKind = "signoz/HeatmapPanel"
+	PanelKindTimeSeries   PanelPluginKind = "signoz/TimeSeriesPanel"
+	PanelKindBarChart     PanelPluginKind = "signoz/BarChartPanel"
+	PanelKindAreaChart    PanelPluginKind = "signoz/AreaChartPanel"
+	PanelKindNumber       PanelPluginKind = "signoz/NumberPanel"
+	PanelKindPieChart     PanelPluginKind = "signoz/PieChartPanel"
+	PanelKindTable        PanelPluginKind = "signoz/TablePanel"
+	PanelKindHistogram    PanelPluginKind = "signoz/HistogramPanel"
+	PanelKindList         PanelPluginKind = "signoz/ListPanel"
+	PanelKindText         PanelPluginKind = "signoz/TextPanel"
+	PanelKindHeatmap      PanelPluginKind = "signoz/HeatmapPanel"
+	PanelKindWebComponent PanelPluginKind = "signoz/WebComponentPanel"
 )
 
 func (PanelPluginKind) Enum() []any {
-	return []any{PanelKindTimeSeries, PanelKindBarChart, PanelKindAreaChart, PanelKindNumber, PanelKindPieChart, PanelKindTable, PanelKindHistogram, PanelKindList, PanelKindText, PanelKindHeatmap}
+	return []any{PanelKindTimeSeries, PanelKindBarChart, PanelKindAreaChart, PanelKindNumber, PanelKindPieChart, PanelKindTable, PanelKindHistogram, PanelKindList, PanelKindText, PanelKindHeatmap, PanelKindWebComponent}
 }
 
 func (k PanelPluginKind) rendersWithoutQuery() bool {
-	return k == PanelKindText
+	return k == PanelKindText || k == PanelKindWebComponent
 }
 
 type TimeSeriesPanelSpec struct {
@@ -333,6 +334,17 @@ type TextPresentation struct {
 	TextAlign     TextAlign     `json:"textAlign"`
 	VerticalAlign VerticalAlign `json:"verticalAlign"`
 	Background    *string       `json:"background,omitempty" validate:"omitempty,hexcolor"`
+}
+
+// WebComponentPanelSpec hosts a registered (or spike-demo) custom element on a dashboard.
+// Dashboards store pluginId + instance props only — never free-form script URLs.
+type WebComponentPanelSpec struct {
+	PluginID      string            `json:"pluginId,omitempty"`
+	PluginVersion string            `json:"pluginVersion,omitempty"`
+	Element       string            `json:"element,omitempty"`
+	Attributes    map[string]string `json:"attributes,omitempty"`
+	Properties    map[string]any    `json:"properties,omitempty"`
+	ConfigKeys    []string          `json:"configKeys,omitempty"`
 }
 
 // ══════════════════════════════════════════════

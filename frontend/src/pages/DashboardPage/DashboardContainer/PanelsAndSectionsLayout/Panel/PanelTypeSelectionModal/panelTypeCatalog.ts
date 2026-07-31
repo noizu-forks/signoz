@@ -63,6 +63,11 @@ const PANEL_TYPE_META: Record<PanelKind, PanelTypeMeta> = {
 		description: 'Markdown notes and context',
 		isNew: true,
 	},
+	'signoz/WebComponentPanel': {
+		group: 'docs',
+		description: 'Embedded web component plugin',
+		isNew: true,
+	},
 };
 
 export type PanelTypeItem = PanelOption & Omit<PanelTypeMeta, 'group'>;

@@ -1,0 +1,9 @@
+# Example: document plugin catalog env (not yet a mapstructure config key).
+# Point the server at a plugin root that contains manifest.json + bundles.
+#
+#   export SIGNOZ_PLUGINS_DIR=/var/lib/signoz/plugins
+#   export SIGNOZ_PLUGINS_ENABLED=true
+#
+# Layout:
+#   $SIGNOZ_PLUGINS_DIR/manifest.json
+#   $SIGNOZ_PLUGINS_DIR/<id>/<version>/plugin.js

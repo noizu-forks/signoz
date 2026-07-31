@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    {
+      "id": "devops-status",
+      "version": "1.0.0",
+      "displayName": "DevOps Status",
+      "element": "lax-devops-status",
+      "source": "catalog",
+      "bundlePath": "/api/v1/plugins/devops-status/1.0.0/bundle.js",
+      "description": "Sample external Web Component for DevOps dashboard tiles"
+    }
+  ]
+}

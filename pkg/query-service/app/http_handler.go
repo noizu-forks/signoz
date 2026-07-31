@@ -17,6 +17,8 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"sort"
@@ -68,6 +70,7 @@ import (
 	traceFunnels "github.com/SigNoz/signoz/pkg/types/tracefunneltypes"
 
 	"github.com/SigNoz/signoz/pkg/query-service/app/integrations/messagingQueues/kafka"
+	"github.com/SigNoz/signoz/pkg/plugins"
 	"github.com/SigNoz/signoz/pkg/query-service/app/logparsingpipeline"
 	"github.com/SigNoz/signoz/pkg/query-service/interfaces"
 	"github.com/SigNoz/signoz/pkg/query-service/model"
@@ -116,6 +119,9 @@ type APIHandler struct {
 	QueryParserAPI *queryparser.API
 
 	Signoz *signoz.SigNoz
+
+	// Dashboard Web Component plugin catalog (Noizu/Lacrosse fork).
+	PluginHandler *plugins.Handler
 }
 
 type APIHandlerOpts struct {
@@ -169,6 +175,14 @@ func NewAPIHandler(opts APIHandlerOpts, config signoz.Config) (*APIHandler, erro
 		Signoz:                        opts.Signoz,
 		QueryParserAPI:                opts.QueryParserAPI,
 	}
+
+	// Plugin catalog: allowlisted dashboard Web Component bundles.
+	pluginCatalog, pluginErr := plugins.NewCatalog(plugins.NewConfigFromEnv())
+	if pluginErr != nil {
+		aH.logger.Warn("plugin catalog failed to load; continuing with empty catalog", errors.Attr(pluginErr))
+		pluginCatalog, _ = plugins.NewCatalog(plugins.Config{Enabled: true, Dir: filepath.Join(os.TempDir(), "signoz-plugins-empty")})
+	}
+	aH.PluginHandler = plugins.NewHandler(pluginCatalog)
 
 	logsQueryBuilder := logsv4.PrepareLogsQuery
 	tracesQueryBuilder := tracesV4.PrepareTracesQuery
@@ -431,6 +445,9 @@ func (aH *APIHandler) RegisterRoutes(router *mux.Router, am *middleware.AuthZ) {
 
 	// Query Filter Analyzer api used to extract metric names and grouping columns from a query
 	router.HandleFunc("/api/v1/query_filter/analyze", am.ViewAccess(aH.QueryParserAPI.AnalyzeQueryFilter)).Methods(http.MethodPost)
+
+	// Dashboard Web Component plugins (allowlisted catalog only)
+	plugins.RegisterRoutes(router, aH.PluginHandler, am.ViewAccess, am.OpenAccess)
 }
 
 func Intersection(a, b []int) (c []int) {

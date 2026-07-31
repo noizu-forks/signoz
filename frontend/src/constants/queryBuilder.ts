@@ -342,6 +342,8 @@ export enum PANEL_TYPES {
 	HEATMAP = 'heatmap',
 	TEXT = 'text',
 	EMPTY_WIDGET = 'EMPTY_WIDGET',
+	/** V2 custom web-component host panel (no SigNoz query). */
+	WEB_COMPONENT = 'web_component',
 }
 
 export enum PANEL_GROUP_TYPES {

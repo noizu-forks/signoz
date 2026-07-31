@@ -2255,6 +2255,34 @@ func TestPanelTypeQueryTypeCompatibility(t *testing.T) {
 	}
 }
 
+func TestWebComponentPanelZeroQueries(t *testing.T) {
+	ok := []byte(`{
+		"panels": {"p1": {"kind": "Panel", "spec": {
+			"links": [],
+			"display": {"name": "Hello WC"},
+			"plugin": {"kind": "signoz/WebComponentPanel", "spec": {"pluginId": "hello", "element": "lax-hello-wc"}},
+			"queries": []
+		}}},
+		"links": [],
+		"layouts": []
+	}`)
+	_, err := unmarshalDashboard(ok)
+	assert.NoError(t, err)
+
+	withQuery := []byte(`{
+		"panels": {"p1": {"kind": "Panel", "spec": {
+			"links": [],
+			"display": {"name": "Hello WC"},
+			"plugin": {"kind": "signoz/WebComponentPanel", "spec": {"pluginId": "hello"}},
+			"queries": [{"kind": "time_series", "spec": {"plugin": {"kind": "signoz/PromQLQuery", "spec": {"name":"A","query":"up"}}}}]
+		}}},
+		"links": [],
+		"layouts": []
+	}`)
+	_, err = unmarshalDashboard(withQuery)
+	assert.Error(t, err)
+}
+
 // TestCommaSeparatedAggregationRejectedOnWrite asserts the write path (unmarshalDashboard
 // runs DashboardSpec.Validate) rejects an aggregation that packs several comma-separated
 // calls into one expression, while accepting a single call and a properly pre-split list.

@@ -5372,6 +5372,45 @@ export interface DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDa
 	spec: DashboardtypesHeatmapPanelSpecDTO;
 }
 
+export enum DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesWebComponentPanelSpecDTOKind {
+	'signoz/WebComponentPanel' = 'signoz/WebComponentPanel',
+}
+export interface DashboardtypesWebComponentPanelSpecDTO {
+	/**
+	 * @type string
+	 */
+	pluginId?: string;
+	/**
+	 * @type string
+	 */
+	pluginVersion?: string;
+	/**
+	 * @type string
+	 */
+	element?: string;
+	/**
+	 * @type object
+	 */
+	attributes?: { [key: string]: string };
+	/**
+	 * @type object
+	 */
+	properties?: { [key: string]: unknown };
+	/**
+	 * @type array
+	 */
+	configKeys?: string[];
+}
+
+export interface DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesWebComponentPanelSpecDTO {
+	/**
+	 * @enum signoz/WebComponentPanel
+	 * @type string
+	 */
+	kind: DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesWebComponentPanelSpecDTOKind;
+	spec: DashboardtypesWebComponentPanelSpecDTO;
+}
+
 export type DashboardtypesPanelPluginDTO =
 	| DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesTimeSeriesPanelSpecDTO
 	| DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesBarChartPanelSpecDTO
@@ -5382,7 +5421,8 @@ export type DashboardtypesPanelPluginDTO =
 	| DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesHistogramPanelSpecDTO
 	| DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesListPanelSpecDTO
 	| DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesTextPanelSpecDTO
-	| DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesHeatmapPanelSpecDTO;
+	| DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesHeatmapPanelSpecDTO
+	| DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesWebComponentPanelSpecDTO;
 
 export enum Querybuildertypesv5RequestTypeDTO {
 	scalar = 'scalar',
@@ -6309,6 +6349,7 @@ export enum DashboardtypesPanelPluginKindDTO {
 	'signoz/ListPanel' = 'signoz/ListPanel',
 	'signoz/TextPanel' = 'signoz/TextPanel',
 	'signoz/HeatmapPanel' = 'signoz/HeatmapPanel',
+	'signoz/WebComponentPanel' = 'signoz/WebComponentPanel',
 }
 /**
  * @nullable
