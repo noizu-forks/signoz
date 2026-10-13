@@ -3,11 +3,10 @@ from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 
 import requests
-from wiremock.resources.mappings import Mapping
 
 from fixtures.auth import USER_ADMIN_EMAIL, USER_ADMIN_PASSWORD, add_license
 from fixtures.metrics import Metrics
-from fixtures.types import Operation, SigNoz, TestContainerDocker
+from fixtures.types import Operation, SigNoz
 
 V2_BASE_URL = "/api/v2/dashboards"
 PANEL_KEY = "24e2697b"
@@ -16,13 +15,12 @@ PANEL_KEY = "24e2697b"
 def test_apply_license(
     signoz: SigNoz,
     create_user_admin: Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
 ) -> None:
     """
     Public dashboards are a licensed feature, so a license must be present.
     """
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
 
 def test_public_dashboard_v2(

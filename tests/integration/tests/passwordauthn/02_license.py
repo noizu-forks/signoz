@@ -1,7 +1,6 @@
 import http
 from collections.abc import Callable
 
-import pytest
 import requests
 from wiremock.client import (
     HttpMethods,
@@ -13,8 +12,11 @@ from wiremock.client import (
 
 from fixtures import types
 from fixtures.auth import USER_ADMIN_EMAIL, USER_ADMIN_PASSWORD
+from fixtures.community import ENTERPRISE_ONLY
 
-pytestmark = pytest.mark.skip(reason="licensing is enterprise-only and not part of the community build")
+# Enterprise licensing is absent from this MIT-only fork; ENTERPRISE_ONLY
+# (fixtures/community.py) is the shared skip reason for the licence/SSO suites.
+pytestmark = ENTERPRISE_ONLY
 
 
 def test_apply_license(
