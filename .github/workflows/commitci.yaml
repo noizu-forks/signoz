@@ -24,14 +24,14 @@ jobs:
       - name: check
         run: |
           if grep -R --include="*.go" '.*/ee/.*' pkg/; then
-            echo "Error: Found references to 'ee' packages in 'pkg' directory"
+            echo "Error: Found references to 'ee' packages in 'pkg' directory - enterprise code has been removed and must not be reintroduced"
             exit 1
           else
             echo "No references to 'ee' packages found in 'pkg' directory"
           fi
 
           if grep -R --include="*.go" '.*/ee/.*' cmd/community/; then
-            echo "Error: Found references to 'ee' packages in 'cmd/community' directory"
+            echo "Error: Found references to 'ee' packages in 'cmd/community' directory - enterprise code has been removed and must not be reintroduced"
             exit 1
           else
             echo "No references to 'ee' packages found in 'cmd/community' directory"

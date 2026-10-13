@@ -53,7 +53,7 @@ jobs:
           - ubuntu-latest
           - macos-latest
     env:
-      CONFIG_PATH: cmd/enterprise/.goreleaser.yaml
+      CONFIG_PATH: cmd/community/.goreleaser.yaml
     runs-on: ${{ matrix.os }}
     steps:
       - name: checkout
