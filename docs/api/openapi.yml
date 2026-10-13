@@ -4170,6 +4170,7 @@ components:
           signoz/TablePanel: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesTablePanelSpec'
           signoz/TextPanel: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesTextPanelSpec'
           signoz/TimeSeriesPanel: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesTimeSeriesPanelSpec'
+          signoz/WebComponentPanel: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesWebComponentPanelSpec'
         propertyName: kind
       oneOf:
       - $ref: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesTimeSeriesPanelSpec'
@@ -4182,6 +4183,7 @@ components:
       - $ref: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesListPanelSpec'
       - $ref: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesTextPanelSpec'
       - $ref: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesHeatmapPanelSpec'
+      - $ref: '#/components/schemas/DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesWebComponentPanelSpec'
       type: object
     DashboardtypesPanelPluginKind:
       enum:
@@ -4195,6 +4197,7 @@ components:
       - signoz/ListPanel
       - signoz/TextPanel
       - signoz/HeatmapPanel
+      - signoz/WebComponentPanel
       type: string
     DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesAreaChartPanelSpec:
       properties:
@@ -4312,6 +4315,18 @@ components:
           type: string
         spec:
           $ref: '#/components/schemas/DashboardtypesTimeSeriesPanelSpec'
+      required:
+      - kind
+      - spec
+      type: object
+    DashboardtypesPanelPluginVariantGithubComSigNozSignozPkgTypesDashboardtypesWebComponentPanelSpec:
+      properties:
+        kind:
+          enum:
+          - signoz/WebComponentPanel
+          type: string
+        spec:
+          $ref: '#/components/schemas/DashboardtypesWebComponentPanelSpec'
       required:
       - kind
       - spec
@@ -4844,6 +4859,26 @@ components:
       - center
       - bottom
       type: string
+    DashboardtypesWebComponentPanelSpec:
+      properties:
+        attributes:
+          additionalProperties:
+            type: string
+          type: object
+        configKeys:
+          items:
+            type: string
+          type: array
+        element:
+          type: string
+        pluginId:
+          type: string
+        pluginVersion:
+          type: string
+        properties:
+          additionalProperties: {}
+          type: object
+      type: object
     ErrorsJSON:
       properties:
         code:
