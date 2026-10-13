@@ -145,6 +145,23 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Make GHCR package public
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER}"
+          pkg="${GITHUB_REPOSITORY##*/}"
+          if gh api --method PATCH "/orgs/${owner}/packages/container/${pkg}" -F visibility=public >/dev/null 2>&1; then
+            echo "GHCR package ${owner}/${pkg} visibility: public"
+          else
+            cur=$(gh api "/orgs/${owner}/packages/container/${pkg}" --jq .visibility 2>/dev/null || true)
+            if [ "${cur}" = "public" ]; then
+              echo "GHCR package ${owner}/${pkg} visibility: public (already)"
+            else
+              echo "::warning::Could not set GHCR package ${owner}/${pkg} public via API (needs admin:packages) — manual toggle required"
+            fi
+          fi
+
       - name: Report published refs
         run: |
           echo "Published tags:"
