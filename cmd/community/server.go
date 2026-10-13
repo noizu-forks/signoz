@@ -20,7 +20,7 @@ import (
 	"github.com/SigNoz/signoz/pkg/factory"
 	"github.com/SigNoz/signoz/pkg/flagger"
 	"github.com/SigNoz/signoz/pkg/gateway"
-	"github.com/SigNoz/signoz/pkg/gateway/noopgateway"
+	"github.com/SigNoz/signoz/pkg/gateway/sqlgateway"
 	"github.com/SigNoz/signoz/pkg/global"
 	"github.com/SigNoz/signoz/pkg/licensing"
 	"github.com/SigNoz/signoz/pkg/licensing/nooplicensing"
@@ -112,8 +112,8 @@ func runServer(ctx context.Context, config signoz.Config, logger *slog.Logger) e
 		func(store sqlstore.SQLStore, settings factory.ProviderSettings, analytics analytics.Analytics, orgGetter organization.Getter, queryParser queryparser.QueryParser, _ querier.Querier, _ licensing.Licensing, tagModule tag.Module, systemDashboardRegistry dashboardtypes.SystemDashboardRegistry) dashboard.Module {
 			return impldashboard.NewModule(impldashboard.NewStore(store), settings, analytics, orgGetter, queryParser, tagModule, systemDashboardRegistry)
 		},
-		func(_ licensing.Licensing) factory.ProviderFactory[gateway.Gateway, gateway.Config] {
-			return noopgateway.NewProviderFactory()
+		func(store sqlstore.SQLStore) factory.ProviderFactory[gateway.Gateway, gateway.Config] {
+			return sqlgateway.NewProviderFactory(store)
 		},
 		func(_ licensing.Licensing) factory.NamedMap[factory.ProviderFactory[auditor.Auditor, auditor.Config]] {
 			return signoz.NewAuditorProviderFactories()

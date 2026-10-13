@@ -2257,6 +2257,7 @@ func TestPanelTypeQueryTypeCompatibility(t *testing.T) {
 
 func TestWebComponentPanelZeroQueries(t *testing.T) {
 	ok := []byte(`{
+		"variables": [],
 		"panels": {"p1": {"kind": "Panel", "spec": {
 			"links": [],
 			"display": {"name": "Hello WC"},
@@ -2270,6 +2271,7 @@ func TestWebComponentPanelZeroQueries(t *testing.T) {
 	assert.NoError(t, err)
 
 	withQuery := []byte(`{
+		"variables": [],
 		"panels": {"p1": {"kind": "Panel", "spec": {
 			"links": [],
 			"display": {"name": "Hello WC"},

@@ -1,0 +1,30 @@
+FROM golang:1.25.7-alpine AS builder
+
+ARG TARGETARCH
+
+ENV GOTOOLCHAIN=local
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
+	go build -C cmd/community -tags timetzdata -buildvcs=false \
+	-o /out/signoz \
+	-ldflags "-s -w -X github.com/SigNoz/signoz/pkg/version.variant=community"
+
+FROM alpine:3.20.3
+LABEL maintainer="signoz"
+WORKDIR /root
+
+RUN apk update && \
+	apk add ca-certificates && \
+	rm -rf /var/cache/apk/*
+
+COPY --from=builder /out/signoz /root/signoz
+COPY ./templates /root/templates
+
+RUN chmod 755 /root /root/signoz
+
+ENTRYPOINT ["./signoz", "server"]
