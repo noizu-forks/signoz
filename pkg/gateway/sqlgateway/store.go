@@ -182,9 +182,9 @@ func (s *store) getLimit(ctx context.Context, orgID, limitID string) (*ingestion
 	var limit ingestionKeyLimit
 	err := s.sqlstore.BunDB().NewSelect().
 		Model(&limit).
-		Join("JOIN ingestion_keys ON ingestion_key_limits.key_id = ingestion_keys.id").
+		Join("JOIN ingestion_keys ON ingestion_key_limit.key_id = ingestion_keys.id").
 		Where("ingestion_keys.org_id = ?", orgID).
-		Where("ingestion_key_limits.id = ?", limitID).
+		Where("ingestion_key_limit.id = ?", limitID).
 		Scan(ctx)
 	if err != nil {
 		return nil, s.sqlstore.WrapNotFoundErrf(err, ErrCodeIngestionKeyLimitNotFound, "ingestion key limit %s not found", limitID)
@@ -196,10 +196,10 @@ func (s *store) listLimits(ctx context.Context, orgID, keyID string) ([]ingestio
 	var limits []ingestionKeyLimit
 	err := s.sqlstore.BunDB().NewSelect().
 		Model(&limits).
-		Join("JOIN ingestion_keys ON ingestion_key_limits.key_id = ingestion_keys.id").
+		Join("JOIN ingestion_keys ON ingestion_key_limit.key_id = ingestion_keys.id").
 		Where("ingestion_keys.org_id = ?", orgID).
-		Where("ingestion_key_limits.key_id = ?", keyID).
-		Order("ingestion_key_limits.created_at DESC").
+		Where("ingestion_key_limit.key_id = ?", keyID).
+		Order("ingestion_key_limit.created_at DESC").
 		Scan(ctx)
 	if err != nil {
 		return nil, errors.WrapInternalf(err, errors.CodeInternal, "error listing ingestion key limits")
@@ -216,10 +216,10 @@ func (s *store) getKeyLimitsByKeyIDs(ctx context.Context, orgID string, keyIDs [
 	var limits []ingestionKeyLimit
 	err := s.sqlstore.BunDB().NewSelect().
 		Model(&limits).
-		Join("JOIN ingestion_keys ON ingestion_key_limits.key_id = ingestion_keys.id").
+		Join("JOIN ingestion_keys ON ingestion_key_limit.key_id = ingestion_keys.id").
 		Where("ingestion_keys.org_id = ?", orgID).
-		Where("ingestion_key_limits.key_id IN (?)", bun.In(keyIDs)).
-		Order("ingestion_key_limits.created_at DESC").
+		Where("ingestion_key_limit.key_id IN (?)", bun.In(keyIDs)).
+		Order("ingestion_key_limit.created_at DESC").
 		Scan(ctx)
 	if err != nil {
 		return nil, errors.WrapInternalf(err, errors.CodeInternal, "error listing ingestion key limits")
@@ -235,10 +235,9 @@ func (s *store) getKeyLimitsByKeyIDs(ctx context.Context, orgID string, keyIDs [
 func (s *store) updateLimit(ctx context.Context, orgID, limitID string, config []byte, tags []byte, now int64) error {
 	res, err := s.sqlstore.BunDB().NewUpdate().
 		Model((*ingestionKeyLimit)(nil)).
-		Table("ingestion_key_limits").
 		Set("config = ?, tags = ?, updated_at = ?", config, tags, now).
-		Where("ingestion_key_limits.id = ?", limitID).
-		Where("ingestion_key_limits.key_id IN (SELECT id FROM ingestion_keys WHERE org_id = ?)", orgID).
+		Where("ingestion_key_limit.id = ?", limitID).
+		Where("ingestion_key_limit.key_id IN (SELECT id FROM ingestion_keys WHERE org_id = ?)", orgID).
 		Exec(ctx)
 	if err != nil {
 		return errors.WrapInternalf(err, errors.CodeInternal, "error updating ingestion key limit")
@@ -258,9 +257,8 @@ func (s *store) updateLimit(ctx context.Context, orgID, limitID string, config [
 func (s *store) deleteLimit(ctx context.Context, orgID, limitID string) error {
 	res, err := s.sqlstore.BunDB().NewDelete().
 		Model((*ingestionKeyLimit)(nil)).
-		Table("ingestion_key_limits").
-		Where("ingestion_key_limits.id = ?", limitID).
-		Where("ingestion_key_limits.key_id IN (SELECT id FROM ingestion_keys WHERE org_id = ?)", orgID).
+		Where("ingestion_key_limit.id = ?", limitID).
+		Where("ingestion_key_limit.key_id IN (SELECT id FROM ingestion_keys WHERE org_id = ?)", orgID).
 		Exec(ctx)
 	if err != nil {
 		return errors.WrapInternalf(err, errors.CodeInternal, "error deleting ingestion key limit")

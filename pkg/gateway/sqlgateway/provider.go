@@ -283,48 +283,6 @@ func toGatewayLimitValue(v *limitValueData) *gatewaytypes.LimitValue {
 	return &gatewaytypes.LimitValue{Size: v.Size, Count: v.Count}
 }
 
-func toGatewayLimitMetric(cfg limitConfigData) gatewaytypes.LimitMetric {
-	metric := gatewaytypes.LimitMetric{}
-	if cfg.Day != nil {
-		metric.Day = &gatewaytypes.LimitMetricValue{}
-		if cfg.Day.Size != nil {
-			metric.Day.Size = *cfg.Day.Size
-		}
-		if cfg.Day.Count != nil {
-			metric.Day.Count = *cfg.Day.Count
-		}
-	}
-	if cfg.Second != nil {
-		metric.Second = &gatewaytypes.LimitMetricValue{}
-		if cfg.Second.Size != nil {
-			metric.Second.Size = *cfg.Second.Size
-		}
-		if cfg.Second.Count != nil {
-			metric.Second.Count = *cfg.Second.Count
-		}
-	}
-	return metric
-}
-
-const maxPerPage = 100
-
-func clampPage(page int) int {
-	if page < 1 {
-		return 1
-	}
-	return page
-}
-
-func clampPerPage(perPage int) int {
-	if perPage < 1 {
-		return 1
-	}
-	if perPage > maxPerPage {
-		return maxPerPage
-	}
-	return perPage
-}
-
 func toGatewayLimitConfig(cfg limitConfigData) gatewaytypes.LimitConfig {
 	return gatewaytypes.LimitConfig{
 		Day:    toGatewayLimitValue(cfg.Day),
