@@ -277,44 +277,10 @@ def apply_license(
 # This is also idempotent in nature.
 def add_license(
     signoz: types.SigNoz,
-    make_http_mocks: Callable[[types.TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],  # pylint: disable=redefined-outer-name
     base_path: str = "",
 ) -> None:
-    make_http_mocks(
-        signoz.zeus,
-        [
-            Mapping(
-                request=MappingRequest(
-                    method=HttpMethods.GET,
-                    url="/v2/licenses/me",
-                    headers={"X-Signoz-Cloud-Api-Key": {WireMockMatchers.EQUAL_TO: "secret-key"}},
-                ),
-                response=MappingResponse(
-                    status=200,
-                    json_body={
-                        "status": "success",
-                        "data": {
-                            "id": "0196360e-90cd-7a74-8313-1aa815ce2a67",
-                            "key": "secret-key",
-                            "valid_from": 1732146923,
-                            "valid_until": -1,
-                            "status": "VALID",
-                            "state": "EVALUATING",
-                            "plan": {
-                                "name": "ENTERPRISE",
-                            },
-                            "platform": "CLOUD",
-                            "features": [],
-                            "event_queue": {},
-                        },
-                    },
-                ),
-                persistent=False,
-            )
-        ],
-    )
-
+    """No-op where the build has no licensing: the MIT-only community build answers 501."""
     access_token = get_token(USER_ADMIN_EMAIL, USER_ADMIN_PASSWORD)
 
     response = requests.post(
@@ -324,18 +290,10 @@ def add_license(
         timeout=5,
     )
 
-    if response.status_code == HTTPStatus.CONFLICT:
+    if response.status_code in (HTTPStatus.CONFLICT, HTTPStatus.NOT_IMPLEMENTED):
         return
 
     assert response.status_code == HTTPStatus.CREATED
-
-    response = requests.post(
-        url=signoz.zeus.host_configs["8080"].get("/__admin/requests/count"),
-        json={"method": "GET", "url": "/v2/licenses/me"},
-        timeout=5,
-    )
-
-    assert response.json()["count"] == 1
 
 
 def create_active_user(

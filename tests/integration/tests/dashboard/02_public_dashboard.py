@@ -4,19 +4,17 @@ from http import HTTPStatus
 import pytest
 import requests
 from sqlalchemy import sql
-from wiremock.resources.mappings import Mapping
 
 from fixtures.auth import USER_ADMIN_EMAIL, USER_ADMIN_PASSWORD, add_license
-from fixtures.types import Operation, SigNoz, TestContainerDocker
+from fixtures.types import Operation, SigNoz
 
 
 def test_apply_license(
     signoz: SigNoz,
     create_user_admin: Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
 ) -> None:
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
 
 def test_create_and_get_public_dashboard(

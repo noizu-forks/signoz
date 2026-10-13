@@ -3,10 +3,9 @@ from http import HTTPStatus
 
 import pytest
 import requests
-from wiremock.resources.mappings import Mapping
 
-from fixtures import types
 from fixtures.auth import USER_ADMIN_EMAIL, USER_ADMIN_PASSWORD, add_license
+from fixtures.community import ENTERPRISE_ONLY
 from fixtures.role import (
     expected_managed_transaction_keys,
     find_role_by_name,
@@ -38,6 +37,7 @@ def test_managed_roles_create_on_register(
         assert role["type"] == "managed"
 
 
+@ENTERPRISE_ONLY
 def test_custom_role_create_requires_license(
     signoz: SigNoz,
     create_user_admin: Operation,  # pylint: disable=unused-argument
@@ -57,10 +57,9 @@ def test_custom_role_create_requires_license(
 def test_apply_license(
     signoz: SigNoz,
     create_user_admin: Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[types.TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
 ) -> None:
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
 
 @pytest.mark.parametrize("role_name", managed_role_names())

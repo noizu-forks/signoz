@@ -28,11 +28,10 @@ GATEWAY_APIS_EDITOR_PASSWORD = "password123Z$"
 def test_apply_license(
     signoz: types.SigNoz,
     create_user_admin: types.Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[types.TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
 ) -> None:
     """Activate a license so that all subsequent gateway calls succeed."""
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
 
 def test_create_editor_user(
