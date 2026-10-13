@@ -1,0 +1,151 @@
+name: noizu-image
+
+on:
+  push:
+    branches:
+      - develop
+      - lacrosse.main
+    tags:
+      - 'noizu-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: noizu-image-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  GO_VERSION: '1.25.7'
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version, image tags and registry targets
+        id: meta
+        env:
+          OPS_USER: ${{ secrets.OPS_REGISTRY_USERNAME }}
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          set -euo pipefail
+          short=$(git rev-parse --short=7 HEAD)
+          ref="${GITHUB_REF}"
+          case "${ref}" in
+            refs/tags/noizu-v*)   ver="${ref#refs/tags/noizu-v}" ;;
+            refs/heads/develop)   ver="develop" ;;
+            refs/heads/lacrosse.main) ver="lacrosse-main" ;;
+            refs/heads/*)         ver="$(echo "${ref#refs/heads/}" | tr '/+' '--')" ;;
+            *)                    ver="manual-${short}" ;;
+          esac
+          echo "version=${ver}" >> "${GITHUB_OUTPUT}"
+          echo "branch=${ref#refs/heads/}" >> "${GITHUB_OUTPUT}"
+          echo "short_sha=${short}" >> "${GITHUB_OUTPUT}"
+
+          if [ -n "${OPS_USER}" ]; then echo "ops=true" >> "${GITHUB_OUTPUT}"; else echo "ops=false" >> "${GITHUB_OUTPUT}"; fi
+          if [ -n "${DH_USER}" ]; then echo "dockerhub=true" >> "${GITHUB_OUTPUT}"; else echo "dockerhub=false" >> "${GITHUB_OUTPUT}"; fi
+
+          tags="ghcr.io/${GITHUB_REPOSITORY,,}:${ver},ghcr.io/${GITHUB_REPOSITORY,,}:sha-${short}"
+          if [ -n "${OPS_USER}" ]; then
+            tags="${tags},ops.noizu.com/signoz:${ver},ops.noizu.com/signoz:sha-${short}"
+          fi
+          if [ -n "${DH_USER}" ]; then
+            tags="${tags},docker.io/noizu/signoz:${ver},docker.io/noizu/signoz:sha-${short}"
+          fi
+          echo "tags=${tags}" >> "${GITHUB_OUTPUT}"
+
+      - name: Warn about skipped registries
+        run: |
+          if [ "${{ steps.meta.outputs.ops }}" != "true" ]; then
+            echo "::warning::ops.noizu.com SKIPPED — OPS_REGISTRY_USERNAME/OPS_REGISTRY_PASSWORD secrets not set"
+          fi
+          if [ "${{ steps.meta.outputs.dockerhub }}" != "true" ]; then
+            echo "::warning::docker.io/noizu/signoz SKIPPED — DOCKERHUB_USERNAME/DOCKERHUB_TOKEN secrets not set"
+          fi
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go.sum
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          CI=1 pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Build Go binary (linux/amd64)
+        run: |
+          set -euo pipefail
+          version="${{ steps.meta.outputs.version }}"
+          short="${{ steps.meta.outputs.short_sha }}"
+          branch="${{ steps.meta.outputs.branch }}"
+          ts=$(git log -1 --format=%ct)
+          mkdir -p target/linux-amd64
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -C cmd/community \
+            -tags timetzdata \
+            -o "${PWD}/target/linux-amd64/signoz-community" \
+            -ldflags "-s -w \
+              -X github.com/SigNoz/signoz/pkg/version.version=${version} \
+              -X github.com/SigNoz/signoz/pkg/version.variant=community \
+              -X github.com/SigNoz/signoz/pkg/version.hash=${short} \
+              -X github.com/SigNoz/signoz/pkg/version.time=${ts} \
+              -X github.com/SigNoz/signoz/pkg/version.branch=${branch} \
+              -X github.com/SigNoz/signoz/pkg/analytics.key=9kRrJ7oPCGPEJLF6QjMPLt5bljFhRQBr"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to ops.noizu.com
+        if: steps.meta.outputs.ops == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ops.noizu.com
+          username: ${{ secrets.OPS_REGISTRY_USERNAME }}
+          password: ${{ secrets.OPS_REGISTRY_PASSWORD }}
+
+      - name: Login to Docker Hub
+        if: steps.meta.outputs.dockerhub == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image (linux/amd64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: cmd/community/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Report published refs
+        run: |
+          echo "Published tags:"
+          echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/^/  /'
