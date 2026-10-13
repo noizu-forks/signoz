@@ -29,6 +29,7 @@ func New(_ context.Context, _ factory.ProviderSettings, _ gateway.Config, sqlsto
 }
 
 func (p *provider) GetIngestionKeys(ctx context.Context, orgID valuer.UUID, page, perPage int) (*gatewaytypes.GettableIngestionKeys, error) {
+	page, perPage = clampPagination(page, perPage)
 	offset := (page - 1) * perPage
 	keys, total, err := p.store.listKeys(ctx, orgID.StringValue(), offset, perPage)
 	if err != nil {
@@ -40,9 +41,21 @@ func (p *provider) GetIngestionKeys(ctx context.Context, orgID valuer.UUID, page
 		pages++
 	}
 
+	keyIDs := make([]string, 0, len(keys))
+	for _, k := range keys {
+		keyIDs = append(keyIDs, k.ID)
+	}
+
+	limitsByKeyID, err := p.store.getKeyLimitsByKeyIDs(ctx, orgID.StringValue(), keyIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	result := make([]gatewaytypes.IngestionKey, 0, len(keys))
 	for _, k := range keys {
-		result = append(result, p.toGatewayIngestionKey(&k))
+		key := p.toGatewayIngestionKey(&k)
+		key.Limits = p.toGatewayLimits(limitsByKeyID[k.ID])
+		result = append(result, key)
 	}
 
 	return &gatewaytypes.GettableIngestionKeys{
@@ -57,6 +70,7 @@ func (p *provider) GetIngestionKeys(ctx context.Context, orgID valuer.UUID, page
 }
 
 func (p *provider) SearchIngestionKeysByName(ctx context.Context, orgID valuer.UUID, name string, page, perPage int) (*gatewaytypes.GettableIngestionKeys, error) {
+	page, perPage = clampPagination(page, perPage)
 	offset := (page - 1) * perPage
 	keys, total, err := p.store.searchKeysByName(ctx, orgID.StringValue(), name, offset, perPage)
 	if err != nil {
@@ -68,9 +82,21 @@ func (p *provider) SearchIngestionKeysByName(ctx context.Context, orgID valuer.U
 		pages++
 	}
 
+	keyIDs := make([]string, 0, len(keys))
+	for _, k := range keys {
+		keyIDs = append(keyIDs, k.ID)
+	}
+
+	limitsByKeyID, err := p.store.getKeyLimitsByKeyIDs(ctx, orgID.StringValue(), keyIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	result := make([]gatewaytypes.IngestionKey, 0, len(keys))
 	for _, k := range keys {
-		result = append(result, p.toGatewayIngestionKey(&k))
+		key := p.toGatewayIngestionKey(&k)
+		key.Limits = p.toGatewayLimits(limitsByKeyID[k.ID])
+		result = append(result, key)
 	}
 
 	return &gatewaytypes.GettableIngestionKeys{
@@ -222,10 +248,12 @@ func (p *provider) toGatewayIngestionKey(key *ingestionKey) gatewaytypes.Ingesti
 }
 
 func (p *provider) toGatewayLimit(limit *ingestionKeyLimit) gatewaytypes.Limit {
+	config := decodeLimitConfig(limit.Config)
 	return gatewaytypes.Limit{
 		ID:        limit.ID,
 		Signal:    limit.Signal,
-		Config:    toGatewayLimitConfig(decodeLimitConfig(limit.Config)),
+		Config:    toGatewayLimitConfig(config),
+		Metric:    toGatewayLimitMetric(config),
 		Tags:      decodeTags(limit.Tags),
 		CreatedAt: fromMillis(limit.CreatedAt),
 		UpdatedAt: fromMillis(limit.UpdatedAt),
@@ -255,12 +283,93 @@ func toGatewayLimitValue(v *limitValueData) *gatewaytypes.LimitValue {
 	return &gatewaytypes.LimitValue{Size: v.Size, Count: v.Count}
 }
 
+func toGatewayLimitMetric(cfg limitConfigData) gatewaytypes.LimitMetric {
+	metric := gatewaytypes.LimitMetric{}
+	if cfg.Day != nil {
+		metric.Day = &gatewaytypes.LimitMetricValue{}
+		if cfg.Day.Size != nil {
+			metric.Day.Size = *cfg.Day.Size
+		}
+		if cfg.Day.Count != nil {
+			metric.Day.Count = *cfg.Day.Count
+		}
+	}
+	if cfg.Second != nil {
+		metric.Second = &gatewaytypes.LimitMetricValue{}
+		if cfg.Second.Size != nil {
+			metric.Second.Size = *cfg.Second.Size
+		}
+		if cfg.Second.Count != nil {
+			metric.Second.Count = *cfg.Second.Count
+		}
+	}
+	return metric
+}
+
+const maxPerPage = 100
+
+func clampPage(page int) int {
+	if page < 1 {
+		return 1
+	}
+	return page
+}
+
+func clampPerPage(perPage int) int {
+	if perPage < 1 {
+		return 1
+	}
+	if perPage > maxPerPage {
+		return maxPerPage
+	}
+	return perPage
+}
+
 func toGatewayLimitConfig(cfg limitConfigData) gatewaytypes.LimitConfig {
 	return gatewaytypes.LimitConfig{
 		Day:    toGatewayLimitValue(cfg.Day),
 		Second: toGatewayLimitValue(cfg.Second),
 	}
 }
+
+func toGatewayLimitMetric(cfg limitConfigData) gatewaytypes.LimitMetric {
+	return gatewaytypes.LimitMetric{
+		Day:    toGatewayLimitMetricValue(cfg.Day),
+		Second: toGatewayLimitMetricValue(cfg.Second),
+	}
+}
+
+func toGatewayLimitMetricValue(v *limitValueData) *gatewaytypes.LimitMetricValue {
+	if v == nil {
+		return nil
+	}
+	return &gatewaytypes.LimitMetricValue{
+		Count: derefInt64(v.Count),
+		Size:  derefInt64(v.Size),
+	}
+}
+
+func derefInt64(v *int64) int64 {
+	if v == nil {
+		return 0
+	}
+	return *v
+}
+
+func clampPagination(page, perPage int) (int, int) {
+	if page < 1 {
+		page = gateway.DefaultPage
+	}
+	if perPage < 1 {
+		perPage = gateway.DefaultPageSize
+	}
+	if perPage > maxPageSize {
+		perPage = maxPageSize
+	}
+	return page, perPage
+}
+
+const maxPageSize = 100
 
 func generateKeyValue() (string, error) {
 	b := make([]byte, 32)

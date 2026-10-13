@@ -70,11 +70,22 @@ func TestListIngestionKeys(t *testing.T) {
 			AddRow("key-1", orgID.StringValue(), "key-a", "val-a", nil, int64(0), int64(1000), int64(1000)).
 			AddRow("key-2", orgID.StringValue(), "key-b", "val-b", nil, int64(0), int64(2000), int64(2000)))
 
+	limitColumns := []string{"id", "key_id", "signal", "config", "tags", "created_at", "updated_at"}
+	mock.ExpectQuery(`SELECT (.+) FROM "ingestion_key_limits".+ JOIN ingestion_keys.+`).
+		WillReturnRows(sqlmock.NewRows(limitColumns).
+			AddRow("lim-1", "key-1", "metrics", []byte(`{"day":{"size":1024}}`), nil, int64(1000), int64(1000)))
+
 	result, err := prov.GetIngestionKeys(ctx, orgID, 1, 10)
 	require.NoError(t, err)
 	assert.Len(t, result.Keys, 2)
 	assert.Equal(t, 2, result.Pagination.Total)
 	assert.Equal(t, 1, result.Pagination.Pages)
+	require.Len(t, result.Keys[0].Limits, 1)
+	assert.Equal(t, "lim-1", result.Keys[0].Limits[0].ID)
+	require.NotNil(t, result.Keys[0].Limits[0].Metric.Day)
+	assert.Equal(t, int64(1024), result.Keys[0].Limits[0].Metric.Day.Size)
+	assert.Equal(t, int64(0), result.Keys[0].Limits[0].Metric.Day.Count)
+	assert.Empty(t, result.Keys[1].Limits)
 
 	require.NoError(t, mock.ExpectationsWereMet())
 }
@@ -98,8 +109,12 @@ func TestDeleteIngestionKey(t *testing.T) {
 	ctx := context.Background()
 	orgID := valuer.GenerateUUID()
 
+	mock.ExpectBegin()
+	mock.ExpectExec(`DELETE FROM "ingestion_key_limits".+ WHERE \(key_id = 'key-1'\)`).
+		WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectExec(`DELETE FROM "ingestion_keys".+ WHERE \(id = 'key-1'\) AND \(org_id = '` + orgID.StringValue() + `'\)`).
 		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
 
 	err := prov.DeleteIngestionKey(ctx, orgID, "key-1")
 	require.NoError(t, err)
@@ -179,9 +194,18 @@ func TestSearchIngestionKeysByName(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows(keyColumns).
 			AddRow("key-1", orgID.StringValue(), "my-key", "val-a", nil, int64(0), int64(1000), int64(1000)))
 
+	limitColumns := []string{"id", "key_id", "signal", "config", "tags", "created_at", "updated_at"}
+	mock.ExpectQuery(`SELECT (.+) FROM "ingestion_key_limits".+ JOIN ingestion_keys.+`).
+		WillReturnRows(sqlmock.NewRows(limitColumns).
+			AddRow("lim-1", "key-1", "logs", []byte(`{"second":{"count":100}}`), nil, int64(1000), int64(1000)))
+
 	result, err := prov.SearchIngestionKeysByName(ctx, orgID, "my", 1, 10)
 	require.NoError(t, err)
 	assert.Len(t, result.Keys, 1)
+	require.Len(t, result.Keys[0].Limits, 1)
+	require.NotNil(t, result.Keys[0].Limits[0].Metric.Second)
+	assert.Equal(t, int64(100), result.Keys[0].Limits[0].Metric.Second.Count)
+	assert.Nil(t, result.Keys[0].Limits[0].Metric.Day)
 
 	require.NoError(t, mock.ExpectationsWereMet())
 }
@@ -213,8 +237,12 @@ func TestDeleteIngestionKey_NotFound(t *testing.T) {
 	ctx := context.Background()
 	orgID := valuer.GenerateUUID()
 
+	mock.ExpectBegin()
+	mock.ExpectExec(`DELETE FROM "ingestion_key_limits".+ WHERE \(key_id = 'nonexistent'\)`).
+		WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectExec(`DELETE FROM "ingestion_keys".+ WHERE \(id = 'nonexistent'\) AND \(org_id = '` + orgID.StringValue() + `'\)`).
 		WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectRollback()
 
 	err := prov.DeleteIngestionKey(ctx, orgID, "nonexistent")
 	require.Error(t, err)

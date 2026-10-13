@@ -179,7 +179,7 @@ func New(
 	authNsCallback func(ctx context.Context, providerSettings factory.ProviderSettings, store authtypes.AuthNStore, licensing licensing.Licensing) (map[authtypes.AuthNProvider]authn.AuthN, error),
 	authzCallback func(context.Context, sqlstore.SQLStore, authz.Config, licensing.Licensing, []authz.OnBeforeRoleDelete) (factory.ProviderFactory[authz.AuthZ, authz.Config], error),
 	dashboardModuleCallback func(sqlstore.SQLStore, factory.ProviderSettings, analytics.Analytics, organization.Getter, queryparser.QueryParser, querier.Querier, licensing.Licensing, tag.Module, dashboardtypes.SystemDashboardRegistry) dashboard.Module,
-	gatewayProviderFactory func(sqlstore.SQLStore, licensing.Licensing) factory.ProviderFactory[gateway.Gateway, gateway.Config],
+	gatewayProviderFactory func(sqlstore.SQLStore) factory.ProviderFactory[gateway.Gateway, gateway.Config],
 	auditorProviderFactories func(licensing.Licensing) factory.NamedMap[factory.ProviderFactory[auditor.Auditor, auditor.Config]],
 	meterReporterProviderFactories func(context.Context, factory.ProviderSettings, flagger.Flagger, licensing.Licensing, telemetrystore.TelemetryStore, retention.Getter, organization.Getter, zeus.Zeus) (factory.NamedMap[factory.ProviderFactory[meterreporter.Reporter, meterreporter.Config]], string),
 	querierHandlerCallback func(factory.ProviderSettings, querier.Querier, analytics.Analytics) querier.Handler,
@@ -480,7 +480,7 @@ func New(
 		return nil, err
 	}
 
-	gatewayFactory := gatewayProviderFactory(sqlstore, licensing)
+	gatewayFactory := gatewayProviderFactory(sqlstore)
 	gateway, err := gatewayFactory.New(ctx, providerSettings, config.Gateway)
 	if err != nil {
 		return nil, err

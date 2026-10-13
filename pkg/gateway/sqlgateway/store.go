@@ -136,7 +136,21 @@ func (s *store) updateKey(ctx context.Context, orgID, keyID, name string, tags [
 }
 
 func (s *store) deleteKey(ctx context.Context, orgID, keyID string) error {
-	res, err := s.sqlstore.BunDB().NewDelete().
+	tx, err := s.sqlstore.BunDB().BeginTx(ctx, nil)
+	if err != nil {
+		return errors.WrapInternalf(err, errors.CodeInternal, "error beginning transaction to delete ingestion key")
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	_, err = tx.NewDelete().
+		Model((*ingestionKeyLimit)(nil)).
+		Where("key_id = ?", keyID).
+		Exec(ctx)
+	if err != nil {
+		return errors.WrapInternalf(err, errors.CodeInternal, "error deleting ingestion key limits")
+	}
+
+	res, err := tx.NewDelete().
 		Model((*ingestionKey)(nil)).
 		Where("id = ?", keyID).
 		Where("org_id = ?", orgID).
@@ -153,7 +167,7 @@ func (s *store) deleteKey(ctx context.Context, orgID, keyID string) error {
 		return errors.NewNotFoundf(ErrCodeIngestionKeyNotFound, "ingestion key %s not found", keyID)
 	}
 
-	return nil
+	return tx.Commit()
 }
 
 func (s *store) createLimit(ctx context.Context, limit *ingestionKeyLimit) error {
@@ -191,6 +205,31 @@ func (s *store) listLimits(ctx context.Context, orgID, keyID string) ([]ingestio
 		return nil, errors.WrapInternalf(err, errors.CodeInternal, "error listing ingestion key limits")
 	}
 	return limits, nil
+}
+
+func (s *store) getKeyLimitsByKeyIDs(ctx context.Context, orgID string, keyIDs []string) (map[string][]ingestionKeyLimit, error) {
+	limitsByKeyIDs := make(map[string][]ingestionKeyLimit, len(keyIDs))
+	if len(keyIDs) == 0 {
+		return limitsByKeyIDs, nil
+	}
+
+	var limits []ingestionKeyLimit
+	err := s.sqlstore.BunDB().NewSelect().
+		Model(&limits).
+		Join("JOIN ingestion_keys ON ingestion_key_limits.key_id = ingestion_keys.id").
+		Where("ingestion_keys.org_id = ?", orgID).
+		Where("ingestion_key_limits.key_id IN (?)", bun.In(keyIDs)).
+		Order("ingestion_key_limits.created_at DESC").
+		Scan(ctx)
+	if err != nil {
+		return nil, errors.WrapInternalf(err, errors.CodeInternal, "error listing ingestion key limits")
+	}
+
+	for _, limit := range limits {
+		limitsByKeyIDs[limit.KeyID] = append(limitsByKeyIDs[limit.KeyID], limit)
+	}
+
+	return limitsByKeyIDs, nil
 }
 
 func (s *store) updateLimit(ctx context.Context, orgID, limitID string, config []byte, tags []byte, now int64) error {
