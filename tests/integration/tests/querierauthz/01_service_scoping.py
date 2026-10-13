@@ -4,7 +4,6 @@ from http import HTTPStatus
 
 import pytest
 import requests
-from wiremock.resources.mappings import Mapping
 
 from fixtures import types
 from fixtures.auth import (
@@ -26,11 +25,10 @@ scoped_email = "scope-key-a@telemetry.test"
 def test_setup(
     signoz: types.SigNoz,
     create_user_admin: types.Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[types.TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
     create_role: Callable[..., str],
 ) -> None:
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
     admin_token = get_token(USER_ADMIN_EMAIL, USER_ADMIN_PASSWORD)
     create_role(

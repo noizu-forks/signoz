@@ -68,8 +68,6 @@ def create_signoz(
                 "signoz:integration",
                 "--build-arg",
                 f"TARGETARCH={arch}",
-                "--build-arg",
-                f"ZEUSURL={zeus.container_configs['8080'].base()}",
                 str(context),
             ],
             check=True,

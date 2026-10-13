@@ -76,7 +76,6 @@ jobs:
           - clickhousecluster
           - metricreduction
         sqlstore-provider:
-          - postgres
           - sqlite
         sqlite-mode:
           - wal
@@ -84,8 +83,6 @@ jobs:
           - 25.12.5
         schema-migrator-version:
           - v0.144.6
-        postgres-version:
-          - 15
     if: |
       ((github.event_name == 'pull_request' && ! github.event.pull_request.head.repo.fork && github.event.pull_request.user.login != 'dependabot[bot]' && ! contains(github.event.pull_request.labels.*.name, 'safe-to-test')) ||
       (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe-to-test'))) && contains(github.event.pull_request.labels.*.name, 'safe-to-integrate')
@@ -152,6 +149,5 @@ jobs:
             integration/tests/${{matrix.suite}} \
             --sqlstore-provider ${{matrix.sqlstore-provider}} \
             --sqlite-mode ${{matrix.sqlite-mode}} \
-            --postgres-version ${{matrix.postgres-version}} \
             --clickhouse-version ${{matrix.clickhouse-version}} \
             --schema-migrator-version ${{matrix.schema-migrator-version}}

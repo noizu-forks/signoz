@@ -2,7 +2,6 @@ from collections.abc import Callable
 from http import HTTPStatus
 
 import requests
-from wiremock.resources.mappings import Mapping
 
 from fixtures import types
 from fixtures.auth import (
@@ -23,10 +22,9 @@ CRUD_ASSIGNEE_USER_PASSWORD = "password123Z$"
 def test_apply_license(
     signoz: types.SigNoz,
     create_user_admin: types.Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[types.TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
 ) -> None:
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
 
 def test_create_get_list_roundtrip(
