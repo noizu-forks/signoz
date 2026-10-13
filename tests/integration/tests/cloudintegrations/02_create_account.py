@@ -51,11 +51,10 @@ provider_spec = pytest.mark.parametrize(
 def test_apply_license(
     signoz: types.SigNoz,
     create_user_admin: types.Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[types.TestContainerDocker, list], None],
     get_token: Callable[[str, str], str],
 ) -> None:
     """Apply a license so that subsequent cloud integration calls succeed."""
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
 
 @provider_spec

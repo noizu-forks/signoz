@@ -2,7 +2,6 @@ from collections.abc import Callable
 from http import HTTPStatus
 
 import requests
-from wiremock.resources.mappings import Mapping
 
 from fixtures.auth import (
     USER_ADMIN_EMAIL,
@@ -13,7 +12,7 @@ from fixtures.auth import (
     find_user_by_email,
 )
 from fixtures.role import find_role_by_name, transaction_group
-from fixtures.types import Operation, SigNoz, TestContainerDocker
+from fixtures.types import Operation, SigNoz
 
 V2_BASE_URL = "/api/v2/dashboards"
 MAX_LIST_LIMIT = 200
@@ -330,10 +329,9 @@ def test_viewer_allowed_on_saved_views(
 def test_apply_license(
     signoz: SigNoz,
     create_user_admin: Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
 ) -> None:
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
 
 def test_editor_allowed_on_public_config(

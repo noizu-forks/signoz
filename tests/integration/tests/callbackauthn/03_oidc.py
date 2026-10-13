@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 import requests
 from selenium import webdriver
-from wiremock.resources.mappings import Mapping
 
 from fixtures.auth import (
     USER_ADMIN_EMAIL,
@@ -13,21 +12,23 @@ from fixtures.auth import (
     assert_user_has_role,
     find_user_with_roles_by_email,
 )
+from fixtures.community import ENTERPRISE_ONLY
 from fixtures.idp import (
     get_oidc_domain,
     perform_oidc_login,
 )
 from fixtures.role import find_role_by_name
-from fixtures.types import Operation, SigNoz, TestContainerDocker, TestContainerIDP
+from fixtures.types import Operation, SigNoz, TestContainerIDP
+
+pytestmark = ENTERPRISE_ONLY
 
 
 def test_apply_license(
     signoz: SigNoz,
     create_user_admin: Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
 ) -> None:
-    add_license(signoz, make_http_mocks, get_token)
+    add_license(signoz, get_token)
 
 
 def test_create_auth_domain(

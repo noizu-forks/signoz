@@ -4,10 +4,12 @@ from urllib.parse import urlparse
 
 import requests
 from selenium import webdriver
-from wiremock.resources.mappings import Mapping
 
 from fixtures.auth import USER_ADMIN_EMAIL, USER_ADMIN_PASSWORD, add_license, assert_user_has_role
-from fixtures.types import Operation, SigNoz, TestContainerDocker, TestContainerIDP
+from fixtures.community import ENTERPRISE_ONLY
+from fixtures.types import Operation, SigNoz, TestContainerIDP
+
+pytestmark = ENTERPRISE_ONLY
 
 # SigNoz is served under /signoz, so the OIDC callback registered with the IdP
 # must include the prefix to match the backend-generated redirect URI.
@@ -18,15 +20,13 @@ OIDC_CALLBACK_PATH = f"{BASE_PATH}/api/v1/complete/oidc"
 def test_apply_license(
     signoz: SigNoz,
     create_user_admin: Operation,  # pylint: disable=unused-argument
-    make_http_mocks: Callable[[TestContainerDocker, list[Mapping]], None],
     get_token: Callable[[str, str], str],
 ) -> None:
     """
     Applies a license to the signoz instance. add_license is a plain function
-    called from the test (function scope), so the function-scoped make_http_mocks
-    fixture is safe to use; base_path prefixes the licensing API call.
+    called from the test (function scope); base_path prefixes the licensing API call.
     """
-    add_license(signoz, make_http_mocks, get_token, base_path=BASE_PATH)
+    add_license(signoz, get_token, base_path=BASE_PATH)
 
 
 def test_create_auth_domain(
