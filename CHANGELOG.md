@@ -1,4 +1,5 @@
 ## 2026-10-14
+- User delete via service account keys: drop users-table deleter lookup that 404'd the service account id before the delete ran (#12).
 - Role CRUD in the openfga authz provider: create/update/delete persist through the role store, delete revokes assignee tuples and runs guard hooks, missing-row updates/deletes now 404 (#9).
 - Delete contracts made observable and precise: deleted service accounts and users 404 on GET, planned-maintenance delete blocks with 409 only when rules reference it (#10).
 - Pipelines batch save no longer regenerates ids: posted-with-id pipelines update in place (org-scoped, audit columns preserved) (#11).
