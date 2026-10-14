@@ -152,19 +152,30 @@ func (ic *LogParsingPipelineController) ApplyPipelines(
 ) (*PipelinesResponse, error) {
 	var pipelines []pipelinetypes.GettablePipeline
 
-	// scan through postable pipelines, to select the existing pipelines or insert missing ones
+	// scan through postable pipelines, to update existing ones or insert missing ones
 	for idx, r := range postable {
 
-		// note: we process only new and changed pipelines here, deleted pipelines are not expected
+		// note: we process updated and new pipelines here, deleted pipelines are not expected
 		// from client. if user deletes a pipelines, the client should not send that pipelines in the update.
 		// in effect, the new config version will not have that pipelines.
 
-		// For versioning, pipelines get stored with unique ids each time they are saved.
-		// This ensures updating a pipeline doesn't alter historical versions that referenced
-		// the same pipeline id.
-		r.ID = uuid.NewString()
+		// Pipelines sent with an id are updated in place so the id stays stable across saves;
+		// pipelines without an id are inserted with a generated id.
 		r.OrderID = idx + 1
-		pipeline, err := ic.insertPipeline(ctx, orgID, &r)
+
+		var pipeline *pipelinetypes.GettablePipeline
+		var err error
+
+		if r.ID != "" {
+			existing, getErr := ic.Repo.GetPipeline(ctx, orgID.String(), r.ID)
+			if getErr != nil {
+				return nil, getErr
+			}
+
+			pipeline, err = ic.Repo.updatePipeline(ctx, orgID, &r, &existing.StoreablePipeline)
+		} else {
+			pipeline, err = ic.Repo.insertPipeline(ctx, orgID, &r)
+		}
 		if err != nil {
 			return nil, err
 		}

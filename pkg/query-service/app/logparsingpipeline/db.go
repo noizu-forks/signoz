@@ -88,6 +88,77 @@ func (r *Repo) insertPipeline(
 	return insertRow, nil
 }
 
+// updatePipeline stores the postable pipeline over an existing row, preserving its
+// id and created audit columns
+func (r *Repo) updatePipeline(
+	ctx context.Context, orgID valuer.UUID, postable *pipelinetypes.PostablePipeline, existing *pipelinetypes.StoreablePipeline,
+) (*pipelinetypes.GettablePipeline, error) {
+	if err := postable.IsValid(); err != nil {
+		return nil, errors.WithAdditionalf(err, "pipeline is not valid")
+	}
+
+	rawConfig, err := json.Marshal(postable.Config)
+	if err != nil {
+		return nil, errors.WrapInternalf(err, errors.CodeInternal, "failed to marshal postable pipeline config")
+	}
+	filter, err := json.Marshal(postable.Filter)
+	if err != nil {
+		return nil, errors.WrapInternalf(err, errors.CodeInternal, "failed to marshal postable pipeline filter")
+	}
+
+	claims, errv2 := authtypes.ClaimsFromContext(ctx)
+	if errv2 != nil {
+		return nil, model.UnauthorizedError(fmt.Errorf("failed to get email from context"))
+	}
+
+	updateRow := &pipelinetypes.GettablePipeline{
+		StoreablePipeline: pipelinetypes.StoreablePipeline{
+			OrgID: orgID.String(),
+			Identifiable: types.Identifiable{
+				ID: existing.ID,
+			},
+			OrderID:      postable.OrderID,
+			Enabled:      postable.Enabled,
+			Name:         postable.Name,
+			Alias:        postable.Alias,
+			Description:  postable.Description,
+			FilterString: string(filter),
+			ConfigJSON:   string(rawConfig),
+			TimeAuditable: types.TimeAuditable{
+				CreatedAt: existing.CreatedAt,
+				UpdatedAt: time.Now(),
+			},
+			UserAuditable: types.UserAuditable{
+				CreatedBy: existing.CreatedBy,
+				UpdatedBy: claims.Email,
+			},
+		},
+		Filter: postable.Filter,
+		Config: postable.Config,
+	}
+
+	result, err := r.sqlStore.BunDB().NewUpdate().
+		Model(&updateRow.StoreablePipeline).
+		WherePK().
+		Where("org_id = ?", orgID.String()).
+		Exec(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "error in updating pipeline data", errors.Attr(err))
+		return nil, errors.WrapInternalf(err, errors.CodeInternal, "failed to update pipeline")
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, errors.WrapInternalf(err, errors.CodeInternal, "failed to update pipeline")
+	}
+
+	if rowsAffected == 0 {
+		return nil, errors.NewNotFoundf(errors.CodeNotFound, "no row found for ingestion pipeline id %v", existing.ID)
+	}
+
+	return updateRow, nil
+}
+
 // getPipelinesByVersion returns pipelines associated with a given version
 func (r *Repo) getPipelinesByVersion(
 	ctx context.Context, orgID string, version int,
