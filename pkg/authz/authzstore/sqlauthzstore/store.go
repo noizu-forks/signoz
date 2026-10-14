@@ -125,7 +125,7 @@ func (store *store) ListByOrgIDAndIDs(ctx context.Context, orgID valuer.UUID, id
 }
 
 func (store *store) Update(ctx context.Context, orgID valuer.UUID, role *authtypes.Role) error {
-	_, err := store.
+	result, err := store.
 		sqlstore.
 		BunDBCtx(ctx).
 		NewUpdate().
@@ -134,14 +134,23 @@ func (store *store) Update(ctx context.Context, orgID valuer.UUID, role *authtyp
 		Where("org_id = ?", orgID).
 		Exec(ctx)
 	if err != nil {
-		return store.sqlstore.WrapNotFoundErrf(err, errors.CodeAlreadyExists, "role with id %s doesn't exist", role.ID)
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.Newf(errors.TypeNotFound, authtypes.ErrCodeRoleNotFound, "role with id %s doesn't exist", role.ID)
 	}
 
 	return nil
 }
 
 func (store *store) Delete(ctx context.Context, orgID valuer.UUID, id valuer.UUID) error {
-	_, err := store.
+	result, err := store.
 		sqlstore.
 		BunDBCtx(ctx).
 		NewDelete().
@@ -150,7 +159,16 @@ func (store *store) Delete(ctx context.Context, orgID valuer.UUID, id valuer.UUI
 		Where("id = ?", id).
 		Exec(ctx)
 	if err != nil {
-		return store.sqlstore.WrapNotFoundErrf(err, authtypes.ErrCodeRoleNotFound, "role with id %s doesn't exist", id)
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.Newf(errors.TypeNotFound, authtypes.ErrCodeRoleNotFound, "role with id %s doesn't exist", id)
 	}
 
 	return nil
