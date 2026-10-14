@@ -216,12 +216,7 @@ func (module *setter) DeleteUser(ctx context.Context, orgID valuer.UUID, id stri
 		return errors.WithAdditionalf(err, "cannot delete already deleted user")
 	}
 
-	deleter, err := module.store.GetUser(ctx, valuer.MustNewUUID(deletedBy))
-	if err != nil {
-		return err
-	}
-
-	if deleter.ID == user.ID {
+	if deletedBy == user.ID.StringValue() {
 		return errors.New(errors.TypeForbidden, errors.CodeForbidden, "cannot self delete")
 	}
 
