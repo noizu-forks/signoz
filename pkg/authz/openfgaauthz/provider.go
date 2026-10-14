@@ -19,27 +19,29 @@ import (
 )
 
 type provider struct {
-	server   *openfgaserver.Server
-	store    authtypes.RoleStore
-	registry *authtypes.Registry
+	server             *openfgaserver.Server
+	store              authtypes.RoleStore
+	registry           *authtypes.Registry
+	onBeforeRoleDelete []authz.OnBeforeRoleDelete
 }
 
-func NewProviderFactory(sqlstore sqlstore.SQLStore, openfgaSchema []openfgapkgtransformer.ModuleFile, openfgaDataStore storage.OpenFGADatastore, registry *authtypes.Registry) factory.ProviderFactory[authz.AuthZ, authz.Config] {
+func NewProviderFactory(sqlstore sqlstore.SQLStore, openfgaSchema []openfgapkgtransformer.ModuleFile, openfgaDataStore storage.OpenFGADatastore, registry *authtypes.Registry, onBeforeRoleDelete []authz.OnBeforeRoleDelete) factory.ProviderFactory[authz.AuthZ, authz.Config] {
 	return factory.NewProviderFactory(factory.MustNewName("openfga"), func(ctx context.Context, ps factory.ProviderSettings, config authz.Config) (authz.AuthZ, error) {
-		return newOpenfgaProvider(ctx, ps, config, sqlstore, openfgaSchema, openfgaDataStore, registry)
+		return newOpenfgaProvider(ctx, ps, config, sqlstore, openfgaSchema, openfgaDataStore, registry, onBeforeRoleDelete)
 	})
 }
 
-func newOpenfgaProvider(ctx context.Context, settings factory.ProviderSettings, config authz.Config, sqlstore sqlstore.SQLStore, openfgaSchema []openfgapkgtransformer.ModuleFile, openfgaDataStore storage.OpenFGADatastore, registry *authtypes.Registry) (authz.AuthZ, error) {
+func newOpenfgaProvider(ctx context.Context, settings factory.ProviderSettings, config authz.Config, sqlstore sqlstore.SQLStore, openfgaSchema []openfgapkgtransformer.ModuleFile, openfgaDataStore storage.OpenFGADatastore, registry *authtypes.Registry, onBeforeRoleDelete []authz.OnBeforeRoleDelete) (authz.AuthZ, error) {
 	server, err := openfgaserver.NewOpenfgaServer(ctx, settings, config, sqlstore, openfgaSchema, openfgaDataStore)
 	if err != nil {
 		return nil, err
 	}
 
 	return &provider{
-		server:   server,
-		store:    sqlauthzstore.NewSqlAuthzStore(sqlstore),
-		registry: registry,
+		server:             server,
+		store:              sqlauthzstore.NewSqlAuthzStore(sqlstore),
+		registry:           registry,
+		onBeforeRoleDelete: onBeforeRoleDelete,
 	}, nil
 }
 
@@ -177,16 +179,57 @@ func (provider *provider) CreateManagedUserRoleTransactions(ctx context.Context,
 	return provider.Grant(ctx, orgID, []string{authtypes.SigNozAdminRoleName}, authtypes.MustNewSubject(coretypes.NewResourceUser(), userID.String(), orgID, nil))
 }
 
-func (setter *provider) Create(_ context.Context, _ valuer.UUID, _ *authtypes.Role) error {
-	return errors.Newf(errors.TypeUnsupported, authtypes.ErrCodeRoleUnsupported, "not implemented")
+func (provider *provider) Create(ctx context.Context, _ valuer.UUID, role *authtypes.Role) error {
+	return provider.store.Create(ctx, role)
 }
 
-func (provider *provider) Update(_ context.Context, _ valuer.UUID, _ *authtypes.Role) error {
-	return errors.Newf(errors.TypeUnsupported, authtypes.ErrCodeRoleUnsupported, "not implemented")
+func (provider *provider) Update(ctx context.Context, orgID valuer.UUID, role *authtypes.Role) error {
+	return provider.store.Update(ctx, orgID, role)
 }
 
-func (provider *provider) Delete(_ context.Context, _ valuer.UUID, _ valuer.UUID) error {
-	return errors.Newf(errors.TypeUnsupported, authtypes.ErrCodeRoleUnsupported, "not implemented")
+func (provider *provider) Delete(ctx context.Context, orgID valuer.UUID, id valuer.UUID) error {
+	role, err := provider.store.Get(ctx, orgID, id)
+	if err != nil {
+		return err
+	}
+
+	if err := role.ErrIfManaged(); err != nil {
+		return err
+	}
+
+	for _, onBeforeRoleDelete := range provider.onBeforeRoleDelete {
+		if err := onBeforeRoleDelete(ctx, orgID, id, role.Name); err != nil {
+			return err
+		}
+	}
+
+	if err := provider.revokeRoleTuples(ctx, orgID, role.Name); err != nil {
+		return err
+	}
+
+	return provider.store.Delete(ctx, orgID, id)
+}
+
+// revokeRoleTuples deletes any lingering assignee tuples for the role object; the
+// onBeforeRoleDelete hooks should already have forced every assignee to release it.
+func (provider *provider) revokeRoleTuples(ctx context.Context, orgID valuer.UUID, roleName string) error {
+	tuples, err := provider.ReadTuples(ctx, &openfgav1.ReadRequestTupleKey{
+		Object:   coretypes.NewResourceRole().Object(orgID, roleName),
+		Relation: authtypes.Relation{Verb: coretypes.VerbAssignee}.StringValue(),
+	})
+	if err != nil {
+		return errors.WithAdditionalf(err, "failed to read assignee tuples for role: %s", roleName)
+	}
+
+	if len(tuples) == 0 {
+		return nil
+	}
+
+	if err := provider.Write(ctx, nil, tuples); err != nil {
+		return errors.WithAdditionalf(err, "failed to delete assignee tuples for role: %s", roleName)
+	}
+
+	return nil
 }
 
 func (provider *provider) CheckTransactions(ctx context.Context, subject string, orgID valuer.UUID, transactions []*authtypes.Transaction) ([]*authtypes.TransactionWithAuthorization, error) {
