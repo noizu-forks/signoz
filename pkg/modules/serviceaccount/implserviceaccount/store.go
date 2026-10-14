@@ -41,6 +41,7 @@ func (store *store) Get(ctx context.Context, orgID valuer.UUID, id valuer.UUID) 
 		Model(storable).
 		Where("id = ?", id).
 		Where("org_id = ?", orgID).
+		Where("status != ?", serviceaccounttypes.ServiceAccountStatusDeleted).
 		Scan(ctx)
 	if err != nil {
 		return nil, store.sqlstore.WrapNotFoundErrf(err, serviceaccounttypes.ErrCodeServiceAccountNotFound, "service account with id: %s doesn't exist in org: %s", id, orgID)
@@ -61,6 +62,7 @@ func (store *store) GetWithRoles(ctx context.Context, orgID valuer.UUID, id valu
 		Relation("ServiceAccountRoles.Role").
 		Where("id = ?", id).
 		Where("org_id = ?", orgID).
+		Where("status != ?", serviceaccounttypes.ServiceAccountStatusDeleted).
 		Scan(ctx)
 	if err != nil {
 		return nil, store.sqlstore.WrapNotFoundErrf(err, serviceaccounttypes.ErrCodeServiceAccountNotFound, "service account with id: %s doesn't exist in org: %s", id, orgID)

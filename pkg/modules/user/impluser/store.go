@@ -78,6 +78,7 @@ func (store *store) GetByOrgIDAndID(ctx context.Context, orgID valuer.UUID, id v
 		Model(user).
 		Where("org_id = ?", orgID).
 		Where("id = ?", id).
+		Where("status != ?", types.UserStatusDeleted).
 		Scan(ctx)
 	if err != nil {
 		return nil, store.sqlstore.WrapNotFoundErrf(err, types.ErrCodeUserNotFound, "user with id %s does not exist", id)

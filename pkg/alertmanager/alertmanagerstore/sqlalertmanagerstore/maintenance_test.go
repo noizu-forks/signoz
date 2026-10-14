@@ -5,15 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
+	"github.com/SigNoz/signoz/pkg/errors"
 	"github.com/SigNoz/signoz/pkg/factory/factorytest"
 	"github.com/SigNoz/signoz/pkg/sqlstore"
 	"github.com/SigNoz/signoz/pkg/sqlstore/sqlitesqlstore"
 	"github.com/SigNoz/signoz/pkg/types"
 	"github.com/SigNoz/signoz/pkg/types/alertmanagertypes"
 	"github.com/SigNoz/signoz/pkg/valuer"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func newTestStore(t *testing.T) sqlstore.SQLStore {
@@ -91,4 +92,66 @@ func TestListPlannedMaintenanceSkipsInvalid(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, list, 1)
 	assert.Equal(t, valid.ID, list[0].ID)
+}
+
+func TestDeletePlannedMaintenance(t *testing.T) {
+	newMaintenance := func(name string) *alertmanagertypes.StorablePlannedMaintenance {
+		return &alertmanagertypes.StorablePlannedMaintenance{
+			Identifiable:  types.Identifiable{ID: valuer.GenerateUUID()},
+			TimeAuditable: types.TimeAuditable{CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()},
+			Name:          name,
+			Schedule:      `{"timezone":"UTC","startTime":"2024-01-01T12:00:00Z","recurrence":{"duration":"2h","repeatType":"daily"}}`,
+			OrgID:         valuer.GenerateUUID().StringValue(),
+		}
+	}
+
+	testCases := []struct {
+		name            string
+		withRule        bool
+		expectDeletable bool
+	}{
+		{
+			name:            "ReferencedByRule_Blocked",
+			withRule:        true,
+			expectDeletable: false,
+		},
+		{
+			name:            "Standalone_Deleted",
+			withRule:        false,
+			expectDeletable: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			store := newTestStore(t)
+			maintenanceStore := NewMaintenanceStore(store, factorytest.NewSettings())
+
+			maintenance := newMaintenance("window")
+			_, err := store.BunDB().NewInsert().Model(maintenance).Exec(t.Context())
+			require.NoError(t, err)
+
+			if testCase.withRule {
+				rule := &alertmanagertypes.StorablePlannedMaintenanceRule{
+					Identifiable:         types.Identifiable{ID: valuer.GenerateUUID()},
+					PlannedMaintenanceID: maintenance.ID,
+					RuleID:               valuer.GenerateUUID(),
+				}
+				_, err = store.BunDB().NewInsert().Model(rule).Exec(t.Context())
+				require.NoError(t, err)
+			}
+
+			err = maintenanceStore.DeletePlannedMaintenance(t.Context(), maintenance.ID)
+
+			if !testCase.expectDeletable {
+				require.Error(t, err)
+				assert.True(t, errors.Ast(err, errors.TypeAlreadyExists))
+				return
+			}
+
+			require.NoError(t, err)
+			_, err = maintenanceStore.GetPlannedMaintenanceByID(t.Context(), maintenance.ID)
+			assert.Error(t, err)
+		})
+	}
 }
