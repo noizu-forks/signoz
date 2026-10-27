@@ -1,5 +1,7 @@
 # Custom-Role Authorization — Design
 
+<!-- 〚📁:56a12678-5902-50e1-ae1c-b19c8ff46137〛 Custom Role Authz Design :: Fork design for custom-role tuples and rollout. -->
+
 Status: draft for review · Date: 2026-10-14 · Base: `develop` @ `e036ce387` (noizu-forks/signoz)
 
 User direction (verbatim):

@@ -1,0 +1,122 @@
+---
+pointers:
+  26642385-25c2-5ec4-9d2a-68b04d0a1b97:
+    created_at: 2026-10-27T04:55:30.752071Z
+    description: Web Component plugin allowlist and security model.
+    file_path: docs/plugins/README.md
+    function: Plugin Catalog Docs
+    kind: file
+    line: 3
+    locations:
+      - file_path: docs/plugins/README.md
+        line: 3
+    token: 𓿏𓁳𓴦𓬇
+    updated_at: 2026-10-27T04:55:30.752071Z
+  56a12678-5902-50e1-ae1c-b19c8ff46137:
+    created_at: 2026-10-27T04:55:30.752045Z
+    description: Fork design for custom-role tuples and rollout.
+    file_path: docs/noizu/custom-role-authz.md
+    function: Custom Role Authz Design
+    kind: file
+    line: 3
+    locations:
+      - file_path: docs/noizu/custom-role-authz.md
+        line: 3
+    token: 𓈕𓧀𔂵𓬗
+    updated_at: 2026-10-27T04:55:30.752045Z
+  6a99168a-2d76-5b58-9f64-62724d3c39c3:
+    created_at: 2026-10-27T04:55:30.752061Z
+    description: React/Vite frontend stack and dev workflow.
+    file_path: frontend/README.md
+    function: Frontend README
+    kind: file
+    line: 16
+    locations:
+      - file_path: frontend/README.md
+        line: 16
+    token: 𓜮𔏹𓴸𓽓
+    updated_at: 2026-10-27T04:55:30.752061Z
+  720b6c18-305b-5342-9fda-932a9a83e2a4:
+    created_at: 2026-10-27T04:55:30.752049Z
+    description: Contribution flow, issue and PR conventions.
+    file_path: CONTRIBUTING.md
+    function: Contributing Guide
+    kind: file
+    line: 3
+    locations:
+      - file_path: CONTRIBUTING.md
+        line: 3
+    token: 𓌽𔍖𓂥𓢄
+    updated_at: 2026-10-27T04:55:30.752049Z
+  77150d28-b522-5d22-8cc9-c8ccec2596ac:
+    created_at: 2026-10-27T04:55:30.752068Z
+    description: Annotated YAML of every runtime config section.
+    file_path: conf/example.yaml
+    function: Runtime Config Example
+    kind: file
+    line: 5
+    locations:
+      - file_path: conf/example.yaml
+        line: 5
+    token: 𓦰𓖘𓆣𓝬
+    updated_at: 2026-10-27T04:55:30.752068Z
+  7a7965e8-2e71-52f8-a841-17b8b55aab1d:
+    created_at: 2026-10-27T04:55:30.752078Z
+    description: Generated HTTP API schema for the SigNoz apiserver.
+    file_path: docs/api/openapi.yml
+    function: OpenAPI Contract
+    kind: file
+    line: 1
+    locations:
+      - file_path: docs/api/openapi.yml
+        line: 1
+    token: 𔏔𓮫𔂓𓓝
+    updated_at: 2026-10-27T04:55:30.752078Z
+  7ecd17a5-6d52-538a-8bfb-d1fe7be78c3d:
+    created_at: 2026-10-27T04:55:30.752052Z
+    description: Local development environment setup.
+    file_path: docs/contributing/development.md
+    function: Development Guide
+    kind: file
+    line: 3
+    locations:
+      - file_path: docs/contributing/development.md
+        line: 3
+    token: 𓗚𔄬𓠞𔘭
+    updated_at: 2026-10-27T04:55:30.752052Z
+  88a37b33-7def-57d1-a963-bb5e1caf8efe:
+    created_at: 2026-10-27T04:55:30.752074Z
+    description: Vulnerability disclosure policy and supported versions.
+    file_path: SECURITY.md
+    function: Security Policy
+    kind: file
+    line: 3
+    locations:
+      - file_path: SECURITY.md
+        line: 3
+    token: 𔄏𓝗𓓅𓫞
+    updated_at: 2026-10-27T04:55:30.752074Z
+  db098565-a72e-594e-a8ff-b834c633ea50:
+    created_at: 2026-10-27T04:55:30.752027Z
+    description: Install and migration instructions for deployments.
+    file_path: deploy/README.md
+    function: Deploy Guide
+    kind: file
+    line: 3
+    locations:
+      - file_path: deploy/README.md
+        line: 3
+    token: 𓀷𓺙𓟊𓏐
+    updated_at: 2026-10-27T04:55:30.752027Z
+  ee6d4256-0854-5c76-a2ef-e36663d0a945:
+    created_at: 2026-10-27T04:55:30.752064Z
+    description: 'Repo entry point: what SigNoz is and how to run it.'
+    file_path: README.md
+    function: SigNoz README
+    kind: file
+    line: 25
+    locations:
+      - file_path: README.md
+        line: 25
+    token: 𓟓𓵂𓐪𓫵
+    updated_at: 2026-10-27T04:55:30.752064Z

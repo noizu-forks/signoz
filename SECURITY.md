@@ -1,5 +1,7 @@
 # Security Policy
 
+<!-- 〚📁:88a37b33-7def-57d1-a963-bb5e1caf8efe〛 Security Policy :: Vulnerability disclosure policy and supported versions. -->
+
 SigNoz is looking forward to working with security researchers across the world to keep SigNoz and our users safe. If you have found an issue in our systems/applications, please report it to us privately.
 
 ## Supported Versions

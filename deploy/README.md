@@ -1,5 +1,7 @@
 # Deploy
 
+<!-- 〚📁:db098565-a72e-594e-a8ff-b834c633ea50〛 Deploy Guide :: Install and migration instructions for deployments. -->
+
 Check that you have cloned [signoz/signoz](https://github.com/signoz/signoz)
 and currently are in `signoz/deploy` folder.
 

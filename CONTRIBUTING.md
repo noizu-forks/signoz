@@ -1,5 +1,7 @@
 # Contributing Guidelines
 
+<!-- 〚📁:720b6c18-305b-5342-9fda-932a9a83e2a4〛 Contributing Guide :: Contribution flow, issue and PR conventions. -->
+
 Thank you for your interest in contributing to our project! We greatly value feedback and contributions from our community. This document will guide you through the contribution process.
 
 ## How can I contribute?

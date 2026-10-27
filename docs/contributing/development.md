@@ -1,5 +1,7 @@
 # Development Guide
 
+<!-- 〚📁:7ecd17a5-6d52-538a-8bfb-d1fe7be78c3d〛 Development Guide :: Local development environment setup. -->
+
 Welcome! This guide will help you set up your local development environment for SigNoz. Let's get you started! 🚀
 
 ## What do I need?
