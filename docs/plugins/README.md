@@ -1,5 +1,7 @@
 # SigNoz Dashboard Plugins (Web Components)
 
+<!-- 〚📁:26642385-25c2-5ec4-9d2a-68b04d0a1b97〛 Plugin Catalog Docs :: Web Component plugin allowlist and security model. -->
+
 Noizu / Lacrosse fork extension. Dashboards can host **Web Component** panels that load only from an **allowlisted plugin catalog**. Free-form script URLs are never taken from dashboard JSON.
 
 ## Security model

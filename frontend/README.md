@@ -13,6 +13,8 @@
 
 # SigNoz Frontend
 
+<!-- 〚📁:6a99168a-2d76-5b58-9f64-62724d3c39c3〛 Frontend README :: React/Vite frontend stack and dev workflow. -->
+
 React-based web interface for [SigNoz](https://signoz.io), the open-source observability platform.
 
 ## Tech Stack

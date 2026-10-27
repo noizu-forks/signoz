@@ -1,3 +1,5 @@
+# 〚📁:7a7965e8-2e71-52f8-a841-17b8b55aab1d〛 OpenAPI Contract :: Generated HTTP API schema for the SigNoz apiserver.
+
 components:
   schemas:
     AlertmanagertypesChannel:

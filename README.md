@@ -22,6 +22,8 @@
 
 SigNoz is an open-source observability platform built on OpenTelemetry. We’re building an enterprise-grade alternative to fragmented monitoring stacks, with logs, metrics, traces, alerts, and dashboards in one place.
 
+<!-- 〚📁:ee6d4256-0854-5c76-a2ef-e36663d0a945〛 SigNoz README :: Repo entry point: what SigNoz is and how to run it. -->
+
 ### Choose how to run SigNoz
 
 #### SigNoz Cloud (Recommended)
