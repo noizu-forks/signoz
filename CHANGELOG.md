@@ -1,3 +1,5 @@
+## 2026-10-26
+- Doc sweep: mint `.meta/pointers.yaml` with 10 seed file pointers (#14); add layout, architecture, schema, and threat-model docs under `docs/` with their summaries and `docs/layout/{pkg,frontend}.md`.
 ## 2026-10-14
 - Custom-role authorization design doc: model v2 tuples, per-kind off/shadow/enforce rollout, audit and phased plan (docs/noizu/custom-role-authz.md).
 - User delete via service account keys: drop users-table deleter lookup that 404'd the service account id before the delete ran (#12).
