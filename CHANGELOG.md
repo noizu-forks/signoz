@@ -1,3 +1,6 @@
+## 2026-10-28
+- docs: add AGENT-README.md (agent orientation)
+
 ## 2026-10-26
 - Doc sweep: mint `.meta/pointers.yaml` with 10 seed file pointers (#14); add layout, architecture, schema, and threat-model docs under `docs/` with their summaries and `docs/layout/{pkg,frontend}.md`.
 ## 2026-10-14
